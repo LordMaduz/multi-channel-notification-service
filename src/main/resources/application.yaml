@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: multi-channel-notification-service
+
+camel:
+  component:
+    mail:
+      starttls: true
+      auth: true
+      ssl: true
+      host: SMTP_HOST
+      port: 465
+      username: EMAIL_USER_NAME
+      password: EMAIL_PASSWORD
+      from: EMAIL_FROM_ADDRESS
+

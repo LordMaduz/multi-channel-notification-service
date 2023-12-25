@@ -13,4 +13,7 @@ camel:
       username: EMAIL_USER_NAME
       password: EMAIL_PASSWORD
       from: EMAIL_FROM_ADDRESS
-
+    whatsapp:
+      phoneId: PHONE_NUMBER_ID
+      accessToken: AUTHORIZATION_TOKEN
+      messageType: MESSAGE_TYPE

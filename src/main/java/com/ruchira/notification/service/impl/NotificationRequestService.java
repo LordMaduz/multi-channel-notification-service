@@ -21,11 +21,14 @@ public class NotificationRequestService implements RequestService {
     private final ResponseUtility responseUtility;
 
     private static final String EMAIL_CHANNEL = "EMAIL";
+    private static final String WHATSAPP_CHANNEL = "WHATSAPP";
 
     @Override
     public Mono<Object> handleRequest(final NotificationRequestVO notificationRequestVO) {
         if (notificationRequestVO.getChannel().equalsIgnoreCase(EMAIL_CHANNEL)) {
             CompletableFuture.runAsync(notificationSenderService::sendNotificationEmail);
+        } else if (notificationRequestVO.getChannel().equalsIgnoreCase(WHATSAPP_CHANNEL)) {
+            CompletableFuture.runAsync(notificationSenderService::sendWhatsappNotification);
         }
         return Mono.just(responseUtility.successResponse("SUCCESS", "200"));
     }

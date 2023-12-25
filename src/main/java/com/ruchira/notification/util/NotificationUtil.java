@@ -4,6 +4,9 @@ import jakarta.activation.DataSource;
 import jakarta.mail.util.ByteArrayDataSource;
 import lombok.experimental.UtilityClass;
 import org.apache.camel.Exchange;
+import org.apache.camel.component.whatsapp.model.Language;
+import org.apache.camel.component.whatsapp.model.TemplateMessage;
+import org.apache.camel.component.whatsapp.model.TemplateMessageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.util.ResourceUtils;
 
@@ -35,5 +38,22 @@ public class NotificationUtil {
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public TemplateMessageRequest getMessageRequest(){
+        final TemplateMessageRequest request = new TemplateMessageRequest();
+        request.setTo("TO_PHONE_NUMBER_CUSTOMIZE");
+        request.setType("template"); //this is customizable
+        request.setTemplate(getMessage());
+        return request;
+    }
+
+    private TemplateMessage getMessage(){
+        final TemplateMessage message = new TemplateMessage();
+        message.setName("hello_world");
+        Language language = new Language();
+        language.setCode("en_US");
+        message.setLanguage(language);
+        return message;
     }
 }

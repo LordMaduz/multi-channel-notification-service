@@ -2,6 +2,7 @@ package com.ruchira.notification.service;
 
 
 import com.ruchira.notification.config.CamelMailConfiguration;
+import com.ruchira.notification.config.CamelWhatsappConfiguration;
 import com.ruchira.notification.util.NotificationUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -9,6 +10,7 @@ import org.apache.camel.*;
 import org.apache.camel.attachment.AttachmentMessage;
 import org.apache.camel.attachment.DefaultAttachment;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.whatsapp.model.TemplateMessageRequest;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
@@ -19,6 +21,7 @@ import org.springframework.stereotype.Service;
 public class NotificationSenderService {
 
     private final CamelMailConfiguration configuration;
+    private final CamelWhatsappConfiguration whatsappConfiguration;
 
     public void sendNotificationEmail() {
 
@@ -57,6 +60,33 @@ public class NotificationSenderService {
             log.error("Error: {}", e.getMessage());
         }
 
+    }
+
+    public void sendWhatsappNotification() {
+        try (final CamelContext context = new DefaultCamelContext()) {
+
+            final String uri = String.format("whatsapp://%s?authorizationToken=%s",
+                    whatsappConfiguration.getPhoneId(), whatsappConfiguration.getAccessToken());
+
+            context.addRoutes(new RouteBuilder() {
+                @Override
+                public void configure() {
+
+                    from("seda:start")
+                            .to(uri)
+                            .log("Whatsapp Message sent with content ${in.body}").end();
+
+                }
+            });
+
+            context.start();
+            final TemplateMessageRequest templateMessageRequest = NotificationUtil.getMessageRequest();
+            ProducerTemplate producer = context.createProducerTemplate();
+            producer.asyncRequestBody("seda:start", templateMessageRequest);
+            context.stop();
+        } catch (Exception e) {
+            log.error("Error: {}", e.getMessage());
+        }
     }
 
 }

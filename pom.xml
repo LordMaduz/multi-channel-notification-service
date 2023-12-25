@@ -63,6 +63,12 @@
 			<artifactId>camel-mail-starter</artifactId>
 			<version>4.3.0</version>
 		</dependency>
+
+		<dependency>
+			<groupId>org.apache.camel.springboot</groupId>
+			<artifactId>camel-whatsapp-starter</artifactId>
+			<version>4.3.0</version>
+		</dependency>
 	</dependencies>
 
 	<build>

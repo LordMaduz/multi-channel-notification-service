@@ -4,9 +4,14 @@ import jakarta.activation.DataSource;
 import jakarta.mail.util.ByteArrayDataSource;
 import lombok.experimental.UtilityClass;
 import org.apache.camel.Exchange;
+import org.apache.camel.component.telegram.model.IncomingMessage;
+import org.apache.camel.component.telegram.model.OutgoingTextMessage;
+import org.apache.camel.component.telegram.model.ReplyKeyboardMarkup;
 import org.apache.camel.component.whatsapp.model.Language;
 import org.apache.camel.component.whatsapp.model.TemplateMessage;
 import org.apache.camel.component.whatsapp.model.TemplateMessageRequest;
+import org.apache.commons.lang3.ObjectUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.MediaType;
 import org.springframework.util.ResourceUtils;
 
@@ -46,6 +51,27 @@ public class NotificationUtil {
         request.setType("template"); //this is customizable
         request.setTemplate(getMessage());
         return request;
+    }
+
+    public OutgoingTextMessage getTelegramMessage(final Exchange exchange){
+
+        String inputReceived = StringUtils.EMPTY;
+        if(ObjectUtils.isNotEmpty(exchange)) {
+            final StringBuilder stringBuilder = new StringBuilder();
+            final IncomingMessage message = exchange.getMessage().getBody(IncomingMessage.class);
+            stringBuilder.append(" For Message ");
+            stringBuilder.append(message.getText());
+            inputReceived = stringBuilder.toString();
+        }
+
+        final OutgoingTextMessage msg = new OutgoingTextMessage();
+        msg.setText(String.format("Responding From SpringBoot Application%s.", inputReceived));
+
+        final ReplyKeyboardMarkup replyMarkup = ReplyKeyboardMarkup.builder()
+                .removeKeyboard(true)
+                .build();
+        msg.setReplyMarkup(replyMarkup);
+        return msg;
     }
 
     private TemplateMessage getMessage(){

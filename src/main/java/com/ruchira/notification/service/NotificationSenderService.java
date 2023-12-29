@@ -2,6 +2,7 @@ package com.ruchira.notification.service;
 
 
 import com.ruchira.notification.config.CamelMailConfiguration;
+import com.ruchira.notification.config.CamelTelegramConfiguration;
 import com.ruchira.notification.config.CamelWhatsappConfiguration;
 import com.ruchira.notification.util.NotificationUtil;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.apache.camel.*;
 import org.apache.camel.attachment.AttachmentMessage;
 import org.apache.camel.attachment.DefaultAttachment;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.telegram.model.OutgoingTextMessage;
 import org.apache.camel.component.whatsapp.model.TemplateMessageRequest;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.springframework.http.HttpHeaders;
@@ -22,6 +24,8 @@ public class NotificationSenderService {
 
     private final CamelMailConfiguration configuration;
     private final CamelWhatsappConfiguration whatsappConfiguration;
+
+    private final CamelTelegramConfiguration telegramConfiguration;
 
     public void sendNotificationEmail() {
 
@@ -84,6 +88,35 @@ public class NotificationSenderService {
             ProducerTemplate producer = context.createProducerTemplate();
             producer.asyncRequestBody("seda:start", templateMessageRequest);
             context.stop();
+        } catch (Exception e) {
+            log.error("Error: {}", e.getMessage());
+        }
+    }
+
+    public void sendTelegramNotification() {
+        try(final CamelContext context = new DefaultCamelContext()) {
+
+            final String uri = String.format("telegram:bots?authorizationToken=%s&chatId=%s",
+                    telegramConfiguration.getAuthToken(), telegramConfiguration.getChatId());
+            context.addRoutes(new RouteBuilder() {
+                @Override
+                public void configure() {
+
+                    from("seda:start")
+                            .to(uri)
+                            .log("Telegram Message sent with content ${in.body}");
+
+                }
+            });
+
+            context.start();
+
+            final OutgoingTextMessage outgoingMessage = NotificationUtil.getTelegramMessage(null);
+            ProducerTemplate producer = context.createProducerTemplate();
+            producer.asyncRequestBody("seda:start", outgoingMessage);
+            context.stop();
+
+
         } catch (Exception e) {
             log.error("Error: {}", e.getMessage());
         }

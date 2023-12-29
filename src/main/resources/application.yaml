@@ -17,3 +17,6 @@ camel:
       phoneId: PHONE_NUMBER_ID
       accessToken: AUTHORIZATION_TOKEN
       messageType: MESSAGE_TYPE
+    telegram:
+      authToken: TELEGRAM_AUTH_TOKEN
+      chatId: CHAT_ID

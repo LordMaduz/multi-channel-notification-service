@@ -3,19 +3,25 @@ package com.ruchira.notification.service;
 
 import com.ruchira.notification.config.CamelMailConfiguration;
 import com.ruchira.notification.config.CamelTelegramConfiguration;
+import com.ruchira.notification.config.CamelTwilioConfiguration;
 import com.ruchira.notification.config.CamelWhatsappConfiguration;
 import com.ruchira.notification.util.NotificationUtil;
+import com.twilio.type.PhoneNumber;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.camel.*;
 import org.apache.camel.attachment.AttachmentMessage;
 import org.apache.camel.attachment.DefaultAttachment;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.builder.ValueBuilder;
 import org.apache.camel.component.telegram.model.OutgoingTextMessage;
+import org.apache.camel.component.twilio.TwilioComponent;
 import org.apache.camel.component.whatsapp.model.TemplateMessageRequest;
 import org.apache.camel.impl.DefaultCamelContext;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Service;
+
+import static org.apache.camel.builder.Builder.constant;
 
 @Service
 @Slf4j
@@ -24,8 +30,8 @@ public class NotificationSenderService {
 
     private final CamelMailConfiguration configuration;
     private final CamelWhatsappConfiguration whatsappConfiguration;
-
     private final CamelTelegramConfiguration telegramConfiguration;
+    private final CamelTwilioConfiguration twilioConfiguration;
 
     public void sendNotificationEmail() {
 
@@ -94,7 +100,7 @@ public class NotificationSenderService {
     }
 
     public void sendTelegramNotification() {
-        try(final CamelContext context = new DefaultCamelContext()) {
+        try (final CamelContext context = new DefaultCamelContext()) {
 
             final String uri = String.format("telegram:bots?authorizationToken=%s&chatId=%s",
                     telegramConfiguration.getAuthToken(), telegramConfiguration.getChatId());
@@ -120,6 +126,50 @@ public class NotificationSenderService {
         } catch (Exception e) {
             log.error("Error: {}", e.getMessage());
         }
+    }
+
+    public void sendSMSNotification() {
+        try (final CamelContext context = new DefaultCamelContext()) {
+
+            setTwilioConfiguration(context);
+            context.addRoutes(new RouteBuilder() {
+                @Override
+                public void configure() {
+
+                    from("seda:start")
+                            .setHeader("CamelTwilioTo", value(NotificationUtil.twilioDestinationPhoneNumber(), PhoneNumber.class))
+                            .setHeader("CamelTwilioFrom", value(twilioConfiguration.getPhoneNumber(), PhoneNumber.class))
+                            .setHeader("CamelTwilioBody", value(NotificationUtil.twilioMessage(), String.class))
+                            .to("twilio://message/creator")
+                            .log("SMS Message sent with content ${in.body}");
+
+                }
+            });
+
+            context.start();
+
+            ProducerTemplate producer = context.createProducerTemplate();
+            producer.asyncRequestBody("seda:start", NotificationUtil.twilioMessage());
+            context.stop();
+
+        } catch (Exception e) {
+            log.error("Error: {}", e.getMessage());
+        }
+    }
+
+    private void setTwilioConfiguration(final CamelContext context) {
+        final TwilioComponent twilio = context.getComponent("twilio", TwilioComponent.class);
+        twilio.setUsername(twilioConfiguration.getAccountSid());
+        twilio.setPassword(twilioConfiguration.getAuthToken());
+    }
+
+    private <T> ValueBuilder value(final String value, final Class<T> type) {
+        if (type == PhoneNumber.class) {
+            return constant(new PhoneNumber(value));
+        } else if (type == String.class) {
+            return constant(value);
+        }
+        return null;
     }
 
 }

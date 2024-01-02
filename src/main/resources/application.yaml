@@ -20,3 +20,7 @@ camel:
     telegram:
       authToken: TELEGRAM_AUTH_TOKEN
       chatId: CHAT_ID
+    twilio:
+      accountSid: TWILIO_SID
+      authToken: TWILIO_AUTH_TOKEN
+      phoneNumber: TWILIO_PHONE_NUMBER

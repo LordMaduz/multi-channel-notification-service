@@ -22,8 +22,8 @@ public class NotificationRequestService implements RequestService {
 
     private static final String EMAIL_CHANNEL = "EMAIL";
     private static final String WHATSAPP_CHANNEL = "WHATSAPP";
-
     private static final String TELEGRAM_CHANNEL = "TELEGRAM";
+    private static final String TWILIO_CHANNEL = "TWILIO";
 
     @Override
     public Mono<Object> handleRequest(final NotificationRequestVO notificationRequestVO) {
@@ -33,6 +33,8 @@ public class NotificationRequestService implements RequestService {
             CompletableFuture.runAsync(notificationSenderService::sendWhatsappNotification);
         } else if (notificationRequestVO.getChannel().equalsIgnoreCase(TELEGRAM_CHANNEL)) {
             CompletableFuture.runAsync(notificationSenderService::sendTelegramNotification);
+        } else if (notificationRequestVO.getChannel().equalsIgnoreCase(TWILIO_CHANNEL)) {
+            CompletableFuture.runAsync(notificationSenderService::sendSMSNotification);
         }
         return Mono.just(responseUtility.successResponse("SUCCESS", "200"));
     }

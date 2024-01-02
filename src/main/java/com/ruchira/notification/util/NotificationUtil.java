@@ -74,6 +74,14 @@ public class NotificationUtil {
         return msg;
     }
 
+    public String twilioDestinationPhoneNumber(){
+        return "TO_PHONE_NUMBER_CUSTOMIZE";
+    }
+
+    public String twilioMessage(){
+        return "Message from Spring Boot Application";
+    }
+
     private TemplateMessage getMessage(){
         final TemplateMessage message = new TemplateMessage();
         message.setName("hello_world");

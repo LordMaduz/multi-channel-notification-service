@@ -1,6 +1,6 @@
 # Design a Multi-Channel Notification Service with Apache Camel
-This repository demonstrates how to design a multi-channel notification service supporting multitude of communications channels. 
-For the demonstration we have added Whatsapp, Telegram, Mail, Twilio Messaging
+This project demonstrates how to design a multi-channel notification service that supports a multitude of communication channels. 
+For the demonstration, we have added WhatsApp, Telegram, Mail, and Twilio Messaging.
 
 ```bash
 ./mvnw clean ; ./mvnw clean compile spring-boot:start
